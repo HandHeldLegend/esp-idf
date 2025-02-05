@@ -721,8 +721,12 @@ void bt_hidd_cb(esp_hidd_cb_event_t event, esp_hidd_cb_param_t *param)
             osi_mutex_unlock(&s_hidd_param.mutex);
             cb_param.protocol_mode.dev = s_hidd_param.dev->dev;
             cb_param.protocol_mode.protocol_mode = s_hidd_param.dev->protocol_mode;
-            cb_param.protocol_mode.map_index = 0;
+
+            // This is broken?
+            //cb_param.protocol_mode.map_index = 0;
+            
             esp_event_post_to(s_hidd_param.dev->event_loop_handle, ESP_HIDD_EVENTS, ESP_HIDD_PROTOCOL_MODE_EVENT,
+
                               &cb_param, sizeof(esp_hidd_event_data_t), portMAX_DELAY);
         } else {
             ESP_LOGE(TAG, "Unsupported protocol mode!");

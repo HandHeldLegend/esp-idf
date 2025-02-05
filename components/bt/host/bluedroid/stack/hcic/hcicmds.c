@@ -774,6 +774,9 @@ BOOLEAN btsnd_hcic_sniff_mode (UINT16 handle, UINT16 max_sniff_period,
     UINT16_TO_STREAM (pp, sniff_attempt);
     UINT16_TO_STREAM (pp, sniff_timeout);
 
+    // TEMP CODE BECAUSE THIS STINKS
+    return (TRUE);
+
     btu_hcif_send_cmd (LOCAL_BR_EDR_CONTROLLER_ID,  p);
     HCI_TRACE_WARNING("hci cmd send: sniff: hdl 0x%x, intv(%d %d)",
                     handle, min_sniff_period, max_sniff_period);
