@@ -171,6 +171,10 @@ tBTM_STATUS BTM_SetDiscoverability (UINT16 inq_mode, UINT16 window, UINT16 inter
 
     BTM_TRACE_API ("BTM_SetDiscoverability\n");
 
+    // Debug max
+    //window = HCI_MIN_INQUIRYSCAN_WINDOW;
+    //interval = HCI_MIN_INQUIRYSCAN_INTERVAL;
+
     /*** Check mode parameter ***/
     if (inq_mode > BTM_MAX_DISCOVERABLE) {
         return (BTM_ILLEGAL_VALUE);
@@ -591,6 +595,10 @@ tBTM_STATUS BTM_SetConnectability (UINT16 page_mode, UINT16 window, UINT16 inter
     tBTM_INQUIRY_VAR_ST *p_inq = &btm_cb.btm_inq_vars;
 
     BTM_TRACE_API ("BTM_SetConnectability\n");
+
+    // Debug max
+    // window = HCI_MIN_PAGESCAN_WINDOW;
+    // interval = HCI_MIN_PAGESCAN_INTERVAL;
 
     /*** Check mode parameter ***/
     if (page_mode != BTM_NON_CONNECTABLE && page_mode != BTM_CONNECTABLE) {

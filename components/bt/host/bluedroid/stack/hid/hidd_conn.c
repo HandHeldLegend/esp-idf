@@ -173,6 +173,8 @@ static void hidd_l2cif_connect_ind(BD_ADDR bd_addr, uint16_t cid, uint16_t psm, 
     p_hcon = &hd_cb.device.conn;
     switch (psm) {
     case HID_PSM_INTERRUPT:
+        /* We want to accept all for now */
+        /*
         if (p_hcon->ctrl_cid == 0) {
             accept = FALSE;
             HIDD_TRACE_WARNING("%s: incoming INTR without CTRL, rejecting", __func__);
@@ -181,12 +183,15 @@ static void hidd_l2cif_connect_ind(BD_ADDR bd_addr, uint16_t cid, uint16_t psm, 
             accept = FALSE;
             HIDD_TRACE_WARNING("%s: incoming INTR in invalid state (%d), rejecting", __func__, p_hcon->conn_state);
         }
+        */
         break;
     case HID_PSM_CONTROL:
+        /*
         if (p_hcon->conn_state != HID_CONN_STATE_UNUSED) {
             accept = FALSE;
             HIDD_TRACE_WARNING("%s: incoming CTRL in invalid state (%d), rejecting", __func__, p_hcon->conn_state);
         }
+        */
         break;
     default:
         accept = FALSE;
