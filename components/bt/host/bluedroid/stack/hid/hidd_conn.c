@@ -93,6 +93,14 @@ static void hidd_check_config_done(void)
  *                  send security block L2C connection response.
  *
  ******************************************************************************/
+
+// Deferred interrupt 
+static BD_ADDR deferred_bd_addr = {0};
+static uint16_t deferred_cid = 0;
+static uint16_t deferred_psm = 0;
+static uint8_t deferred_id = 0;
+static bool deferred_pending = false;
+
 static void hidd_sec_check_complete(UNUSED_ATTR BD_ADDR bd_addr, UNUSED_ATTR tBT_TRANSPORT transport, void *p_ref_data,
                                     uint8_t res)
 {
@@ -102,6 +110,14 @@ static void hidd_sec_check_complete(UNUSED_ATTR BD_ADDR bd_addr, UNUSED_ATTR tBT
         p_dev->conn.conn_state = HID_CONN_STATE_CONNECTING_INTR;
         L2CA_ConnectRsp(p_dev->addr, p_dev->conn.ctrl_id, p_dev->conn.ctrl_cid, L2CAP_CONN_OK, L2CAP_CONN_OK);
         L2CA_ConfigReq(p_dev->conn.ctrl_cid, &hd_cb.l2cap_cfg);
+
+        // Handle deferred INTR and accept
+        if (deferred_pending && memcmp(p_dev->addr, deferred_bd_addr, sizeof(BD_ADDR)) == 0) {
+            HIDD_TRACE_WARNING("%s: Accepting deferred INTR", __func__);
+            hidd_l2cif_connect_ind(deferred_bd_addr, deferred_cid, deferred_psm, deferred_id);
+            deferred_pending = false;
+        }
+
     } else if (res != BTM_SUCCESS) {
         HIDD_TRACE_WARNING("%s: connection rejected by security", __func__);
         p_dev->conn.disc_reason = HID_ERR_AUTH_FAILED;
@@ -154,7 +170,8 @@ static void hidd_l2cif_connect_ind(BD_ADDR bd_addr, uint16_t cid, uint16_t psm, 
     tHID_CONN *p_hcon;
     tHID_DEV_DEV_CTB *p_dev;
     bool accept = TRUE; // accept by default
-    HIDD_TRACE_EVENT("%s: psm=%04x cid=%04x id=%02x", __func__, psm, cid, id);
+    //HIDD_TRACE_EVENT("%s: psm=%04x cid=%04x id=%02x", __func__, psm, cid, id);
+    printf("%s: psm=%04x cid=%04x id=%02x", __func__, psm, cid, id);
     p_dev = &hd_cb.device;
     if (!hd_cb.allow_incoming) {
         HIDD_TRACE_WARNING("%s: incoming connections not allowed, rejecting", __func__);
@@ -171,9 +188,20 @@ static void hidd_l2cif_connect_ind(BD_ADDR bd_addr, uint16_t cid, uint16_t psm, 
         p_dev->state = HIDD_DEV_NO_CONN;
     }
     p_hcon = &hd_cb.device.conn;
+
     switch (psm) {
     case HID_PSM_INTERRUPT:
         if (p_hcon->ctrl_cid == 0) {
+            if(!deferred_pending)
+            {
+                HIDD_TRACE_WARNING("%s: incoming INTR without CTRL, deferring...", __func__);
+                memcpy(deferred_bd_addr, bd_addr, sizeof(BD_ADDR));
+                deferred_cid = cid;
+                deferred_psm = psm;
+                deferred_id = id;
+                deferred_pending = true;
+                return;
+            }
             accept = FALSE;
             HIDD_TRACE_WARNING("%s: incoming INTR without CTRL, rejecting", __func__);
         }
