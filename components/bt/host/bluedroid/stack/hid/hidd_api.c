@@ -257,21 +257,17 @@ tHID_STATUS HID_DevAddRecord(uint32_t handle, char *p_name, char *p_description,
         const char *srv_name = p_name;
         const char *srv_desc = p_description;
         const char *provider_name = p_provider;
-        // result &= SDP_AddAttribute(handle, ATTR_ID_SERVICE_NAME, TEXT_STR_DESC_TYPE, strlen(srv_name) + 1,
-        //                            (uint8_t *)srv_name);
-
-        const char* srv_name_gamepad = "Wireless Gamepad";
-        result &= SDP_AddAttribute(handle, ATTR_ID_SERVICE_NAME, TEXT_STR_DESC_TYPE, strlen(srv_name_gamepad) + 1,
-                                   (uint8_t *)srv_name_gamepad);
-        // result &= SDP_AddAttribute(handle, ATTR_ID_SERVICE_DESCRIPTION, TEXT_STR_DESC_TYPE, strlen(srv_desc) + 1,
-        //                            (uint8_t *)srv_desc);
-        // result &= SDP_AddAttribute(handle, ATTR_ID_PROVIDER_NAME, TEXT_STR_DESC_TYPE, strlen(provider_name) + 1,
-        //                            (uint8_t *)provider_name);
+        result &= SDP_AddAttribute(handle, ATTR_ID_SERVICE_NAME, TEXT_STR_DESC_TYPE, strlen(srv_name) + 1,
+                                   (uint8_t *)srv_name);
+        result &= SDP_AddAttribute(handle, ATTR_ID_SERVICE_DESCRIPTION, TEXT_STR_DESC_TYPE, strlen(srv_desc) + 1,
+                                   (uint8_t *)srv_desc);
+        result &= SDP_AddAttribute(handle, ATTR_ID_PROVIDER_NAME, TEXT_STR_DESC_TYPE, strlen(provider_name) + 1,
+                                   (uint8_t *)provider_name);
     }
     // Bluetooth Profile Descriptor List
     if (result) {
         const uint16_t profile_uuid = UUID_SERVCLASS_HUMAN_INTERFACE;
-        const uint16_t version = 0x0101;
+        const uint16_t version = 0x0100;
         result &= SDP_AddProfileDescriptorList(handle, profile_uuid, version);
     }
     // HID Parser Version
@@ -287,8 +283,7 @@ tHID_STATUS HID_DevAddRecord(uint32_t handle, char *p_name, char *p_description,
         uint16_t temp;
         p = (uint8_t *)&temp;
         UINT16_TO_BE_STREAM(p, rel_num);
-        // REMOVE
-        // result &= SDP_AddAttribute(handle, ATTR_ID_HID_DEVICE_RELNUM, UINT_DESC_TYPE, 2, (uint8_t *)&temp);
+        result &= SDP_AddAttribute(handle, ATTR_ID_HID_DEVICE_RELNUM, UINT_DESC_TYPE, 2, (uint8_t *)&temp);
         p = (uint8_t *)&temp;
         UINT16_TO_BE_STREAM(p, parser_version);
         result &= SDP_AddAttribute(handle, ATTR_ID_HID_PARSER_VERSION, UINT_DESC_TYPE, 2, (uint8_t *)&temp);
@@ -330,30 +325,19 @@ tHID_STATUS HID_DevAddRecord(uint32_t handle, char *p_name, char *p_description,
             result &=
                 SDP_AddAttribute(handle, ATTR_ID_HID_LANGUAGE_ID_BASE, DATA_ELE_SEQ_DESC_TYPE, p - lang_buf, lang_buf);
         }
-        // result &= SDP_AddAttribute(handle, ATTR_ID_HID_BATTERY_POWER, BOOLEAN_DESC_TYPE, 1, (uint8_t *)&bool_true);
-        result &= SDP_AddAttribute(handle, ATTR_ID_HID_REMOTE_WAKE, BOOLEAN_DESC_TYPE, 1, (uint8_t *)&bool_true);
+        result &= SDP_AddAttribute(handle, ATTR_ID_HID_BATTERY_POWER, BOOLEAN_DESC_TYPE, 1, (uint8_t *)&bool_true);
+        result &= SDP_AddAttribute(handle, ATTR_ID_HID_REMOTE_WAKE, BOOLEAN_DESC_TYPE, 1, (uint8_t *)&bool_false);
         result &=
-            SDP_AddAttribute(handle, ATTR_ID_HID_NORMALLY_CONNECTABLE, BOOLEAN_DESC_TYPE, 1, (uint8_t *)&bool_false);
-        result &= SDP_AddAttribute(handle, ATTR_ID_HID_BOOT_DEVICE, BOOLEAN_DESC_TYPE, 1, (uint8_t *)&bool_false);
+            SDP_AddAttribute(handle, ATTR_ID_HID_NORMALLY_CONNECTABLE, BOOLEAN_DESC_TYPE, 1, (uint8_t *)&bool_true);
+        result &= SDP_AddAttribute(handle, ATTR_ID_HID_BOOT_DEVICE, BOOLEAN_DESC_TYPE, 1, (uint8_t *)&bool_true);
         p = (uint8_t *)&temp;
         UINT16_TO_BE_STREAM(p, prof_ver);
-        // result &= SDP_AddAttribute(handle, ATTR_ID_HID_PROFILE_VERSION, UINT_DESC_TYPE, 2, (uint8_t *)&temp);
+        result &= SDP_AddAttribute(handle, ATTR_ID_HID_PROFILE_VERSION, UINT_DESC_TYPE, 2, (uint8_t *)&temp);
     }
-
-    /* new section for supervision timeouts */
-    if(result) {
-        const uint16_t max_delay_size = 0xFFFF;
-        const uint16_t min_delay_size = 0x800c;
-        result &= SDP_AddAttribute(handle, ATTR_ID_HID_SSR_HOST_MAX_LAT, UINT_DESC_TYPE, 2, (uint8_t *)&max_delay_size);
-        result &= SDP_AddAttribute(handle, ATTR_ID_HID_SSR_HOST_MIN_TOUT, UINT_DESC_TYPE, 2, (uint8_t *)&max_delay_size);
-        result &= SDP_AddAttribute(handle, ATTR_ID_HID_LINK_SUPERVISION_TO, UINT_DESC_TYPE, 2, (uint8_t *)&min_delay_size);
+    if (result) {
+        uint16_t browse_group = UUID_SERVCLASS_PUBLIC_BROWSE_GROUP;
+        result &= SDP_AddUuidSequence(handle, ATTR_ID_BROWSE_GROUP_LIST, 1, &browse_group);
     }
-
-    // if (result) {
-    //     uint16_t browse_group = UUID_SERVCLASS_PUBLIC_BROWSE_GROUP;
-    //     result &= SDP_AddUuidSequence(handle, ATTR_ID_BROWSE_GROUP_LIST, 1, &browse_group);
-    // }
-
     if (!result) {
         HIDD_TRACE_ERROR("%s: failed to complete SDP record", __func__);
         return HID_ERR_NOT_REGISTERED;
